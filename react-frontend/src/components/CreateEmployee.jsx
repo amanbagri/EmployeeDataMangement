@@ -1,64 +1,79 @@
 import { useState, useEffect } from 'react';
-import { useHistory, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import EmployeeService from '../services/EmployeeService';
-import { useFormik } from 'formik'
+import { Field, Formik, Form, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+
+
+const validationSchema = Yup.object({
+  firstName: Yup.string().required('Required'),
+  lastName: Yup.string().required('Required'),
+  email: Yup.string().email('Invalid email format').required('Required'),
+});
+
+const FormField = ({ label, name, type, ...rest }) => {
+  return (
+    <div className="form-group">
+      <label htmlFor={name}>{label}</label>
+      <Field
+        type={type}
+        name={name}
+        id={name}
+        className="form-control"
+        {...rest}
+      />
+      <ErrorMessage name={name} />
+    </div>
+  );
+};
 
 const CreateEmployeeComponent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+
+
+  const [initialValues, setInitialValues] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+  });
 
   useEffect(() => {
     if (id !== '_add') {
       EmployeeService.getEmployeeById(id).then((res) => {
-        let employee = res.data;
-        setFirstName(employee.firstName);
-        setLastName(employee.lastName);
-        setEmail(employee.email);
+        const employee = res.data;
+        setInitialValues({
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          email: employee.email,
+        });
       });
     }
   }, [id]);
 
-  const formik = useFormik({
-    initialValues: {
-      firstName: '',
-      lastName: '',
-      email: ''
-    }
-  })
 
-  console.log(formik.values);
-  const saveOrUpdateEmployee = (e) => {
-    e.preventDefault();
-    let employee = { firstName, lastName, email };
+
+  const saveOrUpdateEmployee = ({ firstName, lastName, email }) => {
+    const employee = { firstName, lastName, email };
     console.log('employee => ' + JSON.stringify(employee));
 
-    if (id === '_add') {
-      EmployeeService.createEmployee(employee).then((res) => {
-        navigate('/employee');
-      });
-    } else {
-      EmployeeService.updateEmployee(employee, id).then((res) => {
-        navigate('/employee');
-      });
-    }
+    const request = id === '_add'
+      ? EmployeeService.createEmployee(employee)
+      : EmployeeService.updateEmployee(employee, id);
 
+    request.then(() => {
+      navigate('/employee');
+    });
   };
 
-  const cancel = () => {
-    navigate('/employee');
-  };
 
-  const getTitle = () => {
-    if (id === '_add') {
-      return <h3 className="text-center">Add Employee</h3>;
-    } else {
-      return <h3 className="text-center">Update Employee</h3>;
-    }
-  };
+  
+  const getTitle = () => (
+    <h3 className="text-center">{id === '_add' ? 'Add Employee' : 
+    'Update Employee'}</h3>
+  );
+  
 
   return (
     <div>
@@ -68,58 +83,29 @@ const CreateEmployeeComponent = () => {
           <div className="card col-md-6 offset-md-3 offset-md-3">
             {getTitle()}
             <div className="card-body">
-              <form>
-                <div className="form-group">
-                  <label> First Name: </label>
-                  <input
-                    placeholder="First Name"
-                    name="firstName"
-                    className="form-control"
-                    value={firstName}
-                    onChange={(e) => {
-                      formik.handleChange(e);
-                      setFirstName(e.target.value);
-                    }}
-                  />
-                </div>
-                <div className="form-group">
-                  <label> Last Name: </label>
-                  <input
-                    placeholder="Last Name"
-                    name="lastName"
-                    className="form-control"
-                    value={lastName}
-                    onChange={(e) => {
-                      formik.handleChange(e); 
-                      setLastName(e.target.value);
-                    }}
-                  />
-                </div>
-                <div className="form-group">
-                  <label> Email Id: </label>
-                  <input
-                    placeholder="Email Address"
-                    name="email"
-                    className="form-control"
-                    value={email}
-                    onChange={(e) => {
-                      formik.handleChange(e); 
-                      setEmail(e.target.value);
-                    }}
-                  />
-                </div>
+              <Formik
+                initialValues={initialValues}
+                validationSchema={validationSchema}
+                onSubmit={saveOrUpdateEmployee}
+              >
 
-                <button className="btn btn-success" onClick={saveOrUpdateEmployee}>
-                  Save
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={cancel}
-                  style={{ marginLeft: '10px' }}
-                >
-                  Cancel
-                </button>
-              </form>
+                <Form>
+                  <FormField label="First Name" name="firstName" />
+                  <FormField label="Last Name" name="lastName" />
+                  <FormField label="Email" name="email" type="email" />
+                  <button type='submit' className="btn btn-success" >
+                    Save
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => navigate('/employee')}
+                    style={{ marginLeft: '10px' }}
+                  >
+                    Cancel
+                  </button>
+                </Form>
+
+              </Formik>
             </div>
           </div>
         </div>
