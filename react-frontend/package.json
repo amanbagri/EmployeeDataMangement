@@ -10,6 +10,8 @@
     "bootstrap": "^5.2.3",
     "cros": "^1.0.1",
     "formik": "^2.2.9",
+    "jsonwebtoken": "^9.0.0",
+    "mdb-react-ui-kit": "^6.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.10.0",
@@ -40,5 +42,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
   }
 }

@@ -22,7 +22,11 @@ const FormField = ({ label, name, type, ...rest }) => {
         className="form-control"
         {...rest}
       />
-      <ErrorMessage name={name} />
+      <ErrorMessage name={name} >
+        {
+          errorMsg => <div className='error'>{errorMsg}</div>
+        }
+      </ErrorMessage>
     </div>
   );
 };
@@ -40,7 +44,7 @@ const CreateEmployeeComponent = () => {
   });
 
   useEffect(() => {
-    if (id !== '_add') {
+    if (id !== '_add')  {
       EmployeeService.getEmployeeById(id).then((res) => {
         const employee = res.data;
         setInitialValues({
@@ -54,26 +58,27 @@ const CreateEmployeeComponent = () => {
 
 
 
-  const saveOrUpdateEmployee = ({ firstName, lastName, email }) => {
-    const employee = { firstName, lastName, email };
+  const saveOrUpdateEmployee = ({ firstName, lastName, email, password }) => {
+    const employee = { firstName, lastName, email, password };
     console.log('employee => ' + JSON.stringify(employee));
-
+  
     const request = id === '_add'
       ? EmployeeService.createEmployee(employee)
       : EmployeeService.updateEmployee(employee, id);
-
+  
     request.then(() => {
       navigate('/employee');
     });
   };
-
-
   
+
+
+
   const getTitle = () => (
-    <h3 className="text-center">{id === '_add' ? 'Add Employee' : 
-    'Update Employee'}</h3>
+    <h3 className="text-center">{id === '_add' ? 'Add Employee' :
+      'Update Employee'}</h3>
   );
-  
+
 
   return (
     <div>
@@ -87,12 +92,14 @@ const CreateEmployeeComponent = () => {
                 initialValues={initialValues}
                 validationSchema={validationSchema}
                 onSubmit={saveOrUpdateEmployee}
+                enableReinitialize={true}
               >
 
                 <Form>
                   <FormField label="First Name" name="firstName" />
                   <FormField label="Last Name" name="lastName" />
                   <FormField label="Email" name="email" type="email" />
+                  <FormField label="Password" name="password" type="password" />
                   <button type='submit' className="btn btn-success" >
                     Save
                   </button>
